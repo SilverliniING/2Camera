@@ -103,7 +103,7 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
         for n in range(len(joints2)): 
             jointset2 = joints2[n]
             count = 0
-            sum_cosine_similarity = 0
+            sum= 0
             
             
              # Iterate through corresponding joint pairs
@@ -121,21 +121,12 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
                           print(array1)
                           print("ARRAY")
                           print(array1)
-
-                        
-                        # Compute magnitudes
-                        magnitude1 = np.linalg.norm(array1)
-                        magnitude2 = np.linalg.norm(array2)
-                        
-                        # Compute cosine similarity (handle division by zero)
-                        if magnitude1 * magnitude2 != 0:
-                            cosine_similarity = dot_product / (magnitude1 * magnitude2)
-                            sum_cosine_similarity += abs(cosine_similarity)
-            
+                        euc = np.linalg.norm(array1 - array2)
+                        sum = sum + euc
             # Calculate average cosine similarity
             if count != 0:
-                average_cosine_similarity = sum_cosine_similarity / count
-                rgb_diff_matrix[m, n] = average_cosine_similarity**(-math.sqrt(count)) 
+                average_cosine_similarity = sum / count
+                rgb_diff_matrix[m, n] = average_cosine_similarity 
     
     return rgb_diff_matrix
 
@@ -166,7 +157,7 @@ def get_min_indices(array):
             row = array[:, i]
         
         # Find the index of the minimum value in the row or column
-        min_index = np.argmax(row)
+        min_index = np.argmin(row)
         
         # Update the min_indices array with the index of the minimum value
         min_indices[i % other_dim] = min_index

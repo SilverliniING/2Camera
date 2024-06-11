@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from ultralytics import YOLO as yolo
 from joingrgbheader import *
-
+#???
 # code fixing goals:
 # make sure boxes show up on each person detected
 # reduce frame processing by logging best fits
@@ -20,14 +20,14 @@ model = yolo("yolov8n-pose.pt", task="pose")
 video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
-cap1 = cv.VideoCapture(video_path1)
-cap2 = cv.VideoCapture(video_path2)
+#cap1 = cv.VideoCapture(video_path1)
+#cap2 = cv.VideoCapture(video_path2)
 
-'''
+
 
 cap1 = cv.VideoCapture(0)
 cap2 = cv.VideoCapture(1)
-'''
+
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
 
@@ -48,7 +48,6 @@ while cap1.isOpened() and cap2.isOpened():
         if diff(prev1, frame1) > thresh or diff(prev2, frame2) > thresh:
             results1 = model(source=frame1)
             results2 = model(source=frame2)
-            print("I AM HERE")
         else:
             if results1 is None:
                 results1 = model(source=frame1)
