@@ -1,5 +1,5 @@
 #Libraries
-
+import math
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO as yolo
@@ -42,9 +42,9 @@ colors = [
     (230, 216, 173)
 ]
 
-
+"""
 # Function to calculate the average cosine similarity of RGB differences between corresponding joints in two arrays
-def get_joint_rgb_diff(joints1, joints2,frame1,frame2):
+def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
     rgb_diff_matrix = np.zeros((len(joints1), len(joints2)))
     
     # Iterate through joints in joints1
@@ -55,7 +55,8 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2):
             count = 0
             sum_cosine_similarity = 0
             
-            # Iterate through corresponding joint pairs
+            
+             # Iterate through corresponding joint pairs
             for i in range(len(jointset1)): 
                 x, y = jointset1[i]
                 if x != 0 or y != 0:
@@ -64,8 +65,13 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2):
                         count += 1
                         array1 = frame1[y-1, x-1]
                         array2 = frame2[q-1, p-1]
-                        print("ARRAY")
-                        print(array1)
+                    
+                        if x==p and y==q:
+                          print("ARRAY")
+                          print(array1)
+                          print("ARRAY")
+                          print(array1)
+
                         # Compute dot product
                         dot_product = np.dot(array1, array2)
                         
@@ -81,7 +87,55 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2):
             # Calculate average cosine similarity
             if count != 0:
                 average_cosine_similarity = sum_cosine_similarity / count
-                rgb_diff_matrix[m, n] = average_cosine_similarity**(-count) 
+                rgb_diff_matrix[m, n] = average_cosine_similarity**(-math.sqrt(count)) 
+    
+    return rgb_diff_matrix
+"""
+
+
+# Function to calculate the average cosine similarity of RGB differences between corresponding joints in two arrays
+def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
+    rgb_diff_matrix = np.zeros((len(joints1), len(joints2)))
+    
+    # Iterate through joints in joints1
+    for m in range(len(joints1)): 
+        jointset1 = joints1[m]
+        for n in range(len(joints2)): 
+            jointset2 = joints2[n]
+            count = 0
+            sum_cosine_similarity = 0
+            
+            
+             # Iterate through corresponding joint pairs
+            for i in range(len(jointset1)): 
+                x, y = jointset1[i]
+                if x != 0 or y != 0:
+                    p, q = jointset2[i]
+                    if p != 0 or q != 0:
+                        count += 1
+                        array1 = frame1[y-1, x-1]
+                        array2 = frame2[q-1, p-1]
+                    
+                        if x==p and y==q:
+                          print("ARRAY")
+                          print(array1)
+                          print("ARRAY")
+                          print(array1)
+
+                        
+                        # Compute magnitudes
+                        magnitude1 = np.linalg.norm(array1)
+                        magnitude2 = np.linalg.norm(array2)
+                        
+                        # Compute cosine similarity (handle division by zero)
+                        if magnitude1 * magnitude2 != 0:
+                            cosine_similarity = dot_product / (magnitude1 * magnitude2)
+                            sum_cosine_similarity += abs(cosine_similarity)
+            
+            # Calculate average cosine similarity
+            if count != 0:
+                average_cosine_similarity = sum_cosine_similarity / count
+                rgb_diff_matrix[m, n] = average_cosine_similarity**(-math.sqrt(count)) 
     
     return rgb_diff_matrix
 

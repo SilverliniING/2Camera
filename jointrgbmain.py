@@ -107,7 +107,7 @@ while cap1.isOpened() and cap2.isOpened():
                 x, y = joint
                 if x != 0 or y != 0:
                     cv.circle(frame1_annotated, (x, y), 5, (0, 255, 0), -1)  # Draw a green circle at each keypoint location
-                # Draw keypoints
+                # Draw keypoi
             
         if cameraval == 2: 
           for i, bbox in enumerate(bboxes2):
