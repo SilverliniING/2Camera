@@ -7,7 +7,7 @@ from ultralytics import YOLO as yolo
 from joingrgbheader import *
 
 
-bbox_color = generate_rgb_array(colors,10)
+bbox_color = generate_rgb_array(10)
 
 # Initialize the results variables
 results1 = None
@@ -84,7 +84,7 @@ while cap1.isOpened() and cap2.isOpened():
         bboxes2 = np.array(results2[0].boxes.xyxy).astype(int)
        
         # Example usage
-        cameraval, bbox_labels = label_same_person(joi3nts1, joints2, frame1, frame2,bboxes1,bboxes2)
+        cameraval, bbox_labels = label_same_person(joints1, joints2, frame1, frame2,bboxes1,bboxes2)
         print(bbox_labels)
         #bbox_color = generate_rgb_array(max(len(joints1),len(joints2)))
         if cameraval == 1: 
