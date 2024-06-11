@@ -3,6 +3,10 @@ import numpy as np
 from ultralytics import YOLO as yolo
 from joingrgbheader import *
 
+# code fixing goals:
+# make sure boxes show up on each person detected
+# reduce frame processing by logging best fits
+# set up threshold
 
 bbox_color = generate_rgb_array(colors,10)
 
@@ -16,14 +20,14 @@ model = yolo("yolov8n-pose.pt", task="pose")
 video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
-#cap1 = cv.VideoCapture(video_path1)
-#cap2 = cv.VideoCapture(video_path2)
+cap1 = cv.VideoCapture(video_path1)
+cap2 = cv.VideoCapture(video_path2)
 
-#'''
+'''
 
 cap1 = cv.VideoCapture(0)
 cap2 = cv.VideoCapture(1)
-
+'''
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
 
