@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 sys.path.append('/Users/aaryakawalay/Desktop/IITB/IITB_2Cameras/sort')
 import numpy as np
-from sort import Sort
+from sort import sort
 from ultralytics import YOLO as yolo
 import random
 
@@ -22,6 +22,40 @@ Output Data Type
 mse (Mean Squared Error):
 Type: float
 Description: This is a single floating-point number representing the average squared differences between the pixel values of the two frames. It quantifies the difference between the frames, with higher values indicating more significant changes."""
+
+
+def get_min_indices(array):
+    # Determine the longest dimension
+    m, n = array.shape
+    longest_dim = max(m, n)
+    
+    # Determine the other dimension
+    other_dim = min(m, n)
+    
+    # Initialize an array to store the indices of the minimum values
+    min_indices = np.zeros(other_dim, dtype=int)
+    
+    # Determine CAMERAVALUE
+    if m > n:
+        CAMERAVALUE = 1
+    else:
+        CAMERAVALUE = 2
+    
+    # Iterate over the longest dimension
+    for i in range(longest_dim):
+        # Extract the row or column depending on the longest dimension
+        if m > n:  # Rows are longer
+            row = array[i, :]
+        else:  # Columns are longer
+            row = array[:, i]
+        
+        # Find the index of the minimum value in the row or column
+        min_index = np.argmin(row)
+        
+        # Update the min_indices array with the index of the minimum value
+        min_indices[i % other_dim] = min_index
+    
+    return min_indices, CAMERAVALUE
 
 def diff(prev, frame):
     #Converts frames to grayscale and computes the Mean Squared Error (MSE) to detect significant changes between consecutive frames.
@@ -195,111 +229,56 @@ def get_joint_rgb_diff(joints1, joints2, frame1, frame2):
     
     
 # Function to calculate the average cosine similarity of RGB differences between corresponding joints in two arrays
-def get_joint_rgb_diff(joints1, joints2,frame1,frame2):
+import numpy as np
+
+import numpy as np
+
+import numpy as np
+
+def get_joint_rgb_diff(joints1, joints2, frame1, frame2):
     rgb_diff_matrix = np.zeros((len(joints1), len(joints2)))
-    
-    # Iterate through joints in joints1
-    for m in range(len(joints1)): 
+
+    for m in range(len(joints1)):
         jointset1 = joints1[m]
-        for n in range(len(joints2)): 
+        
+        if len(jointset1) == 0:
+            continue
+        
+        for n in range(len(joints2)):
             jointset2 = joints2[n]
+            
+            if len(jointset2) == 0:
+                continue
+            
             count = 0
-            sum_cosine_similarity = 0
-            
-            # Iterate through corresponding joint pairs
-            for i in range(len(jointset1)): 
+            mse_sum = 0
+
+            for i in range(len(jointset1)):
                 x, y = jointset1[i]
-                if x != 0 or y != 0:
-                    p, q = jointset2[i]
-                    if p != 0 or q != 0:
-                        count += 1
-                        array1 = frame1[y-1, x-1]
-                        array2 = frame2[q-1, p-1]
-                        print("ARRAY")
-                        print(array1)
-                        # Compute dot product
-                        dot_product = np.dot(array1, array2)
-                        
-                        # Compute magnitudes
-                        magnitude1 = np.linalg.norm(array1)
-                        magnitude2 = np.linalg.norm(array2)
-                        
-                        # Compute cosine similarity (handle division by zero)
-                        if magnitude1 * magnitude2 != 0:
-                            cosine_similarity = dot_product / (magnitude1 * magnitude2)
-                            sum_cosine_similarity += abs(cosine_similarity)
-            
-            # Calculate average cosine similarity
+                
+                if x <= 0 or y <= 0 or x >= frame1.shape[1] or y >= frame1.shape[0]:
+                    continue
+                
+                p, q = jointset2[i]
+                
+                if p <= 0 or q <= 0 or p >= frame2.shape[1] or q >= frame2.shape[0]:
+                    continue
+
+                array1 = frame1[y-1, x-1]
+                array2 = frame2[q-1, p-1]
+                
+                # Compute MSE
+                mse = ((array1 - array2) ** 2).mean()
+                mse_sum += mse
+
+                count += 1
+
             if count != 0:
-                average_cosine_similarity = sum_cosine_similarity / count
-                rgb_diff_matrix[m, n] = average_cosine_similarity**(-count) 
+                avg_mse = mse_sum / count
+                rgb_diff_matrix[m, n] = avg_mse
     
     return rgb_diff_matrix
 
-
-###
-import numpy as np
-
-"""
-def get_min_indices(array):
-    # Determine the longest dimension
-    longest_dim = max(array.shape)
-    
-    # Determine the other dimension
-    other_dim = min(array.shape)
-    
-    # Initialize an array to store the indices of the minimum values
-    min_indices = np.zeros(other_dim, dtype=int)
-    
-    # Iterate over the longest dimension
-    for i in range(longest_dim):
-        # Extract the row or column depending on the longest dimension
-        if array.shape[0] > array.shape[1]:  # Rows are longer
-            row = array[i, :]
-        else:  # Columns are longer
-            row = array[:, i]
-        
-        # Find the index of the minimum value in the row or column
-        min_index = np.argmin(row)
-        
-        # Update the min_indices array with the index of the minimum value
-        min_indices[i % other_dim] = min_index
-    
-    return min_indices
-
-"""
-def get_min_indices(array):
-    # Determine the longest dimension
-    m, n = array.shape
-    longest_dim = max(m, n)
-    
-    # Determine the other dimension
-    other_dim = min(m, n)
-    
-    # Initialize an array to store the indices of the minimum values
-    min_indices = np.zeros(other_dim, dtype=int)
-    
-    # Determine CAMERAVALUE
-    if m > n:
-        CAMERAVALUE = 1
-    else:
-        CAMERAVALUE = 2
-    
-    # Iterate over the longest dimension
-    for i in range(longest_dim):
-        # Extract the row or column depending on the longest dimension
-        if m > n:  # Rows are longer
-            row = array[i, :]
-        else:  # Columns are longer
-            row = array[:, i]
-        
-        # Find the index of the minimum value in the row or column
-        min_index = np.argmax(row)
-        
-        # Update the min_indices array with the index of the minimum value
-        min_indices[i % other_dim] = min_index
-    
-    return min_indices, CAMERAVALUE
 
 
 
@@ -352,12 +331,17 @@ def get_key_by_value(dictionary, target_value):
             return key
     return None  # Return None if the value is not found in the dictionary
 
+import random
+
+
+
 def generate_rgb_array(size):
     rgb_array = []
     for _ in range(size):
-        rgb = [random.randint(0, 255) for _ in range(3)]  # Generate random RGB values
+        rgb = random.choice(colors)
         rgb_array.append(rgb)
     return rgb_array
+
 
 def label_same_person(joints1, joints2, frame1, frame2, bboxes1, bboxes2, thresh=0.5):
     """
@@ -407,4 +391,3 @@ def label_same_person(joints1, joints2, frame1, frame2, bboxes1, bboxes2, thresh
 
 
 
-"""def label_same_person(joints1, joints2, frame1, frame2, bboxes1,bboxes2,thresh=0.5):
