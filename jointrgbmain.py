@@ -1,12 +1,21 @@
-import cv2 as cv
-import numpy as np
-from ultralytics import YOLO as yolo
 from joingrgbheader import *
 #???
 # code fixing goals:
 # make sure boxes show up on each person detected
 # reduce frame processing by logging best fits
 # set up threshold
+
+
+"""  
+        if cameraval == 1: 
+            for jointset2 in joints2: 
+               bbox2new = associate_joints_with_bboxes(jointset2)
+               q1,q2,q3,q4 =  bbox2new 
+               for bbox2 in camera2matchup[i]:
+                  p1,p2,p3,p4 = bbox2
+                  if avg(abs(q1-p1)+abs(q2-p2))
+           
+"""
 
 bbox_color = generate_rgb_array(colors,10)
 
@@ -20,13 +29,11 @@ model = yolo("yolov8n-pose.pt", task="pose")
 video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
-#cap1 = cv.VideoCapture(video_path1)
-#cap2 = cv.VideoCapture(video_path2)
+cap1 = cv.VideoCapture(video_path1)
+cap2 = cv.VideoCapture(video_path2)
 
-
-
-cap1 = cv.VideoCapture(0)
-cap2 = cv.VideoCapture(1)
+#cap1 = cv.VideoCapture(0)
+#cap2 = cv.VideoCapture(1)
 
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
@@ -41,6 +48,9 @@ if not ret1 or not ret2:
     exit()
 
 # Main loop
+people =[]
+
+
 while cap1.isOpened() and cap2.isOpened():
     ret1, frame1 = cap1.read()
     ret2, frame2 = cap2.read()
@@ -65,6 +75,7 @@ while cap1.isOpened() and cap2.isOpened():
         print(joints1)
         print("\nKey Points Matrix - Camera 2:")
         print(joints2)
+
         print("RGB DIFF:")
         MATRIX = get_joint_rgb_diff(joints1, joints2, frame1, frame2)
         print(MATRIX)
@@ -106,7 +117,7 @@ while cap1.isOpened() and cap2.isOpened():
                 x, y = joint
                 if x != 0 or y != 0:
                     cv.circle(frame1_annotated, (x, y), 5, (0, 255, 0), -1)  # Draw a green circle at each keypoint location
-                # Draw keypoi
+                # Draw keypoints
             
         if cameraval == 2: 
           for i, bbox in enumerate(bboxes2):

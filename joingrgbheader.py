@@ -1,27 +1,19 @@
 #Libraries
-import math
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO as yolo
 import random
 
 #relevent to rgbjoints
+#change this to make it bounding box specific!!!
 def diff(prev, frame):
-    #Converts frames to grayscale and computes the Mean Squared Error (MSE) to detect significant changes between consecutive frames.
-    #print("Previous frame shape:", prev.shape)  
-    #print("Current frame shape:", frame.shape) 
-
     prev = cv.cvtColor(prev, cv.COLOR_BGR2GRAY)
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-
-    # print("Previous frame shape after conversion:", prev.shape) 
-    #print("Current frame shape after conversion:", frame.shape)
-
     # Compute the Mean Squared Error (MSE)
     mse = ((prev - frame) ** 2).mean()
     return mse
 
-#global variables
+#global variables for bounding box colors
 colors = [
     (0, 0, 255),
     (0, 255, 0),
@@ -42,58 +34,7 @@ colors = [
     (230, 216, 173)
 ]
 
-"""
-# Function to calculate the average cosine similarity of RGB differences between corresponding joints in two arrays
-def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
-    rgb_diff_matrix = np.zeros((len(joints1), len(joints2)))
-    
-    # Iterate through joints in joints1
-    for m in range(len(joints1)): 
-        jointset1 = joints1[m]
-        for n in range(len(joints2)): 
-            jointset2 = joints2[n]
-            count = 0
-            sum_cosine_similarity = 0
-            
-            
-             # Iterate through corresponding joint pairs
-            for i in range(len(jointset1)): 
-                x, y = jointset1[i]
-                if x != 0 or y != 0:
-                    p, q = jointset2[i]
-                    if p != 0 or q != 0:
-                        count += 1
-                        array1 = frame1[y-1, x-1]
-                        array2 = frame2[q-1, p-1]
-                    
-                        if x==p and y==q:
-                          print("ARRAY")
-                          print(array1)
-                          print("ARRAY")
-                          print(array1)
-
-                        # Compute dot product
-                        dot_product = np.dot(array1, array2)
-                        
-                        # Compute magnitudes
-                        magnitude1 = np.linalg.norm(array1)
-                        magnitude2 = np.linalg.norm(array2)
-                        
-                        # Compute cosine similarity (handle division by zero)
-                        if magnitude1 * magnitude2 != 0:
-                            cosine_similarity = dot_product / (magnitude1 * magnitude2)
-                            sum_cosine_similarity += abs(cosine_similarity)
-            
-            # Calculate average cosine similarity
-            if count != 0:
-                average_cosine_similarity = sum_cosine_similarity / count
-                rgb_diff_matrix[m, n] = average_cosine_similarity**(-math.sqrt(count)) 
-    
-    return rgb_diff_matrix
-"""
-
-
-# Function to calculate the average cosine similarity of RGB differences between corresponding joints in two arrays
+# Function to calculate the average of RGB differences between corresponding joints in two arrays
 def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
     rgb_diff_matrix = np.zeros((len(joints1), len(joints2)))
     
@@ -130,7 +71,8 @@ def get_joint_rgb_diff(joints1, joints2,frame1,frame2,thresh=0.6):
     
     return rgb_diff_matrix
 
-
+'''
+#Function to get match the joints with best match [mapped from frame with min joints to frame with max joints]
 def get_min_indices(array):
     # Determine the longest dimension
     m, n = array.shape
@@ -140,15 +82,15 @@ def get_min_indices(array):
     other_dim = min(m, n)
     
     # Initialize an array to store the indices of the minimum values
-    min_indices = np.zeros(other_dim, dtype=int)
+    min_indices = np.inf(other_dim, dtype=int)
     
     # Determine CAMERAVALUE
     if m > n:
-        CAMERAVALUE = 1
+        CAMERAVALUE = 1 #this implies Camera2 joints are mapped to Camera 1 (search space is Camera1)
     else:
-        CAMERAVALUE = 2
+        CAMERAVALUE = 2 #this implies Camera1 joints are mapped to Camera 2 (search space is Camera2)
     
-    # Iterate over the longest dimension
+    # Iterate over the longest dimension (searchspace)
     for i in range(longest_dim):
         # Extract the row or column depending on the longest dimension
         if m > n:  # Rows are longer
@@ -158,11 +100,50 @@ def get_min_indices(array):
         
         # Find the index of the minimum value in the row or column
         min_index = np.argmin(row)
-        
+
         # Update the min_indices array with the index of the minimum value
         min_indices[i % other_dim] = min_index
     
     return min_indices, CAMERAVALUE
+'''
+
+#Function to get match the joints with best match [mapped from frame with min joints to frame with max joints]
+def get_min_indices(array):
+    # Determine the longest dimension
+    m, n = array.shape
+    longest_dim = max(m, n)
+    
+    # Determine the other dimension
+    other_dim = min(m, n)
+    
+    # Initialize an array to store the indices of the minimum values
+    min_indices = np.full(other_dim, -1, dtype=int)
+
+    # Determine CAMERAVALUE
+    if m > n:
+        CAMERAVALUE = 1 #this implies Camera2 joints are mapped to Camera 1 (search space is Camera1)
+    else:
+        CAMERAVALUE = 2 #this implies Camera1 joints are mapped to Camera 2 (search space is Camera2)
+    
+    # Iterate over the longest dimension (searchspace)
+    for i in range(longest_dim):
+        # Extract the row or column depending on the longest dimension
+        if m > n:  # Rows are longer
+            row = array[i, :]
+        else:  # Columns are longer
+            row = array[:, i]
+        
+        # Find the index of the minimum value in the row or column
+        min_index = int(np.argmin(row))
+        if min_indices[min_index] != -1:
+          if array[min_indices[min_index]] > row[min_index]: 
+              # Update the min_indices array with the index of the minimum value
+              min_indices[ min_index ] = i
+        else:
+             min_indices[ min_index ] = i 
+    
+    return min_indices, CAMERAVALUE
+
 
 
 
