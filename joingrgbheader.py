@@ -21,6 +21,63 @@ def diff(prev, frame):
     mse = ((prev - frame) ** 2).mean()
     return mse
 
+
+def find_closest_element(dictionary,input_tuple ):
+    min_distance = float('inf')
+    closest_key = None
+    closest_value = None
+    print("I am input approx")
+    print("I am dictionary")
+    for key,value in dictionary.items():
+        distance = np.linalg.norm(np.array(input_tuple) - np.array(key))
+        if distance < min_distance:
+            min_distance = distance
+            closest_key = key
+            closest_value = value
+            
+    if (closest_key is not None) and (closest_value is not None):
+      return closest_key,  closest_value
+    else:
+       return (0,0,0,0),(0,0,0,0)
+
+#change this to make it bounding box specific!!!
+def diff2( element,prevbboxmatchup):
+    currentbbox = find_bounding_box_center_width_height(element)
+    if prevbboxmatchup != []:
+     findclosest, _ =  find_closest_element(prevbboxmatchup,element)
+     xcentre1, ycentre1, _, _ = findclosest
+     xcentre2, ycentre2, _, _ = currentbbox
+     array1 = np.array([xcentre1, ycentre1])
+     array2 = np.array([xcentre2, ycentre2])
+     euc = np.linalg.norm( array1 - array2 )
+     print("EUC")
+     print(euc)
+     if abs(euc) > 2000 and np.any(findclosest != 0):
+        return True
+     else:
+        return False
+    else:
+     return True
+    
+def update_key_by_rgb(rgb_dict, new_key, rgb_value):
+
+    # Find the key corresponding to the given RGB value
+    old_key = None
+    for key, value in rgb_dict.items():
+        if value == rgb_value:
+            old_key = key
+            break
+
+    if old_key is None:
+        print(f"No entry found with RGB value {rgb_value}")
+        rgb_dict[new_key] = rgb_value
+        return False
+
+    # Update the dictionary
+    rgb_dict[new_key] = rgb_dict.pop(old_key)
+    print(f"Key {old_key} replaced with {new_key} for RGB value {rgb_value}")
+    return True
+
 #global variables for bounding box colors
 colors = [
     (0, 0, 255),
