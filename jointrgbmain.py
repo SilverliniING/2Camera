@@ -29,11 +29,11 @@ model = yolo("yolov8n-pose.pt", task="pose")
 video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
-cap1 = cv.VideoCapture(video_path1)
-cap2 = cv.VideoCapture(video_path2)
+#cap1 = cv.VideoCapture(video_path1)
+#cap2 = cv.VideoCapture(video_path2)
 
-#cap1 = cv.VideoCapture(0)
-#cap2 = cv.VideoCapture(1)
+cap1 = cv.VideoCapture(0)
+cap2 = cv.VideoCapture(1)
 
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
@@ -84,12 +84,15 @@ while cap1.isOpened() and cap2.isOpened():
         frame1_annotated = frame1.copy()
         frame2_annotated = frame2.copy()
         
-        bboxes1 = np.array(results1[0].boxes.xyxy).astype(int)  # Assuming boxes.xyxy provides (x1, y1, x2, y2)
-        bboxes2 = np.array(results2[0].boxes.xyxy).astype(int)
-       
+        #bboxes1 = np.array(results1[0].boxes.xyxy).astype(int)  # Assuming boxes.xyxy provides (x1, y1, x2, y2)
+        #bboxes2 = np.array(results2[0].boxes.xyxy).astype(int)
+        
         # Example usage
-        cameraval, bbox_labels = label_same_person(joints1, joints2, frame1, frame2,bboxes1,bboxes2)
+        cameraval2, bbox_labels2 = label_same_person(joints1, joints2, frame1, frame2,bboxes1,bboxes2)
+        cameraval, bbox_labels = label_same_person2(joints1, joints2, frame1, frame2)
+        
         print(bbox_labels)
+        print(bbox_labels2)
         #bbox_color = generate_rgb_array(max(len(joints1),len(joints2)))
         if cameraval == 1: 
           for i, bbox in enumerate(bboxes1):
@@ -98,6 +101,8 @@ while cap1.isOpened() and cap2.isOpened():
             custom_text = f"Person {i + 1}"
             if i < len(bbox_labels):
                bboxtuple = tuple(bbox)
+               print(bboxtuple)
+               print(bbox_labels[bboxtuple])
                camera2matchup = bbox_labels[bboxtuple]
                print("MATCH UP BOX")
                print(camera2matchup)
@@ -126,6 +131,8 @@ while cap1.isOpened() and cap2.isOpened():
             custom_text = f"Person {i + 1}"
             if i < len(bbox_labels):
                bboxtuple = tuple(bbox)
+               print(bboxtuple)
+               print(bbox_labels[bboxtuple])
                camera2matchup = bbox_labels[bboxtuple]
                print("MATCH UP BOX")
                print(camera2matchup)
@@ -149,7 +156,6 @@ while cap1.isOpened() and cap2.isOpened():
             
         cv.imshow("Camera 1", frame1_annotated)
         cv.imshow("Camera 2", frame2_annotated)
-
       
 
         # Break the loop on 'q' key press
