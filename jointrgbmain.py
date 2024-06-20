@@ -84,8 +84,8 @@ while cap1.isOpened() and cap2.isOpened():
         frame1_annotated = frame1.copy()
         frame2_annotated = frame2.copy()
         
-        #bboxes1 = np.array(results1[0].boxes.xyxy).astype(int)  # Assuming boxes.xyxy provides (x1, y1, x2, y2)
-        #bboxes2 = np.array(results2[0].boxes.xyxy).astype(int)
+        bboxes1 = np.array(results1[0].boxes.xyxy).astype(int)  # Assuming boxes.xyxy provides (x1, y1, x2, y2)
+        bboxes2 = np.array(results2[0].boxes.xyxy).astype(int)
         
         # Example usage
         cameraval2, bbox_labels2 = label_same_person(joints1, joints2, frame1, frame2,bboxes1,bboxes2)

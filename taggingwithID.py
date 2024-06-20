@@ -29,11 +29,11 @@ model = yolo("yolov8n-pose.pt", task="pose")
 video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
-#cap1 = cv.VideoCapture(video_path1)
-#cap2 = cv.VideoCapture(video_path2)
+cap1 = cv.VideoCapture(video_path1)
+cap2 = cv.VideoCapture(video_path2)
 
-cap1 = cv.VideoCapture(0)
-cap2 = cv.VideoCapture(1)
+#cap1 = cv.VideoCapture(0)
+#cap2 = cv.VideoCapture(1)
 
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
@@ -76,14 +76,14 @@ while cap1.isOpened() and cap2.isOpened():
 
      
         # Print key point matrices
-      print("Key Points Matrix - Camera 1:")
-      print(joints1)
-      print("\nKey Points Matrix - Camera 2:")
+     # print("Key Points Matrix - Camera 1:")
+      #print(joints1)
+     # print("\nKey Points Matrix - Camera 2:")
       # Annotate the frame with custom colors and text
       frame1_annotated = frame1.copy()
       frame2_annotated = frame2.copy()
-      print("\nJoints2 2:")
-      print(joints2)
+      #print("\nJoints2 2:")
+      #print(joints2)
       
       for jointset in joints2:
                 for joint in jointset:
@@ -99,8 +99,8 @@ while cap1.isOpened() and cap2.isOpened():
              
         
       if len(joints1) > 0 and len(joints2)> 0 :
-        print(len(joints1)) 
-        print(len(joints2))
+        #print(len(joints1)) 
+        #print(len(joints2))
         print("RGB DIFF:")
         MATRIX = get_joint_rgb_diff(joints1, joints2, frame1, frame2)
         print(MATRIX)
@@ -112,14 +112,14 @@ while cap1.isOpened() and cap2.isOpened():
         #cameraval2, bbox_labels2 = label_same_person(joints1, joints2, frame1, frame2,bboxes1,bboxes2)
         cameraval, bbox_labels = label_same_person2(joints1, joints2, frame1, frame2)
         
-        print(bbox_labels)
+       #print(bbox_labels)
         
         #bbox_color = generate_rgb_array(max(len(joints1),len(joints2)))
         if cameraval == 1: 
          for i, joint2 in enumerate(joints2):
           if joint2.all != None and np.any(joint2 != [0,0]):
-            print("i AM Joint2")
-            print(joint2)
+            #print("i AM Joint2")
+            #print(joint2)
             x_centre, y_centre, w, h = find_bounding_box_center_width_height(joint2)
             bbox =   x_centre, y_centre, w, h
             decimaltuple = convert_bbox_to_x1y1x2y2(bbox,True)
@@ -129,18 +129,21 @@ while cap1.isOpened() and cap2.isOpened():
             for pickcolor in bbox_color:
               if pickcolor not in people.values():
                 color = pickcolor
-           
-            if diff2( joint2,prevbboxes2) :
-             "I am different"
+            new, val =  diff2(joint2,prevbboxes2)
+            if val :
+         
              update_key_by_rgb(people,bbox,color)
              cv.rectangle(frame2_annotated, (x1, y1), (x2, y2), color, 2)  # Draw the bounding box with custom color
-            
-            
+          
             else:
-             findclosest,matchframe = find_closest_element(prevbboxes2,joints2,)
+             findclosest,matchframe = find_closest_element(prevbboxes2,joint2)
              
-             if findclosest != (0,0,0,0):
+             if new != (0,0,0,0):
+              #print("PEOPLE1")
+              #print(people)
               rgbofOG = people[findclosest]
+              print("I am rgb of closest")
+              print(rgbofOG)
               update_key_by_rgb(people,bbox,rgbofOG)
               color = rgbofOG[bbox]
             cv.rectangle(frame2_annotated, (x1, y1), (x2, y2), color, 2)  # Draw the bounding box with custom color
@@ -166,7 +169,7 @@ while cap1.isOpened() and cap2.isOpened():
             text_x = newx
             text_y = newy - 10 if newy - 10 > 10 else newy + 10
             cv.putText(frame2_annotated, custom_text, (text_x, text_y), cv.FONT_HERSHEY_SIMPLEX, 2, color, 2, cv.LINE_AA)
-            
+         prevbboxes1 = bbox_labels
        
               
    
@@ -185,16 +188,18 @@ while cap1.isOpened() and cap2.isOpened():
             for pickcolor in bbox_color:
               if pickcolor not in people.values():
                 color = pickcolor
-            if diff2( joint1,prevbboxes1) :
+            new,val = diff2(joint1,prevbboxes1)
+            if  val:
+             print( "I am different")
              update_key_by_rgb(people,bbox,color)
              cv.rectangle(frame1_annotated, (x1, y1), (x2, y2), color, 2)  # Draw the bounding box with custom color
+            
             else:
-             findclosest,matchframe = find_closest_element(prevbboxes1,joints1)
+             findclosest,matchframe = find_closest_element(prevbboxes1,joint1)
              print("I am closest val")
-             print(findclosest)
-             if findclosest != (0,0,0,0):
+             print(new)
+             if new != (0,0,0,0):
               rgbofOG = people[findclosest]
-
               print("I am rgb of closest")
               print(rgbofOG)
               update_key_by_rgb(people,bbox,rgbofOG)
@@ -206,11 +211,11 @@ while cap1.isOpened() and cap2.isOpened():
             custom_text = f"Person {i + 1}"
             if i < len(bbox_labels):
                bboxtuple = tuple(bbox)
-               print(bboxtuple)
-               print(bbox_labels[bboxtuple])
+               #print(bboxtuple)
+               #print(bbox_labels[bboxtuple])
                camera2matchup = convert_bbox_to_x1y1x2y2((bbox_labels[bboxtuple]),True) #yolo format 
-               print("MATCH UP BOX")
-               print(camera2matchup)
+               #print("MATCH UP BOX")
+               #print(camera2matchup)
                if camera2matchup is not None:
         
                   X1, Y1, X2, Y2 =  tuple(math.floor(num) for num in camera2matchup)
@@ -223,7 +228,9 @@ while cap1.isOpened() and cap2.isOpened():
             text_x = newx
             text_y = newy - 10 if newy - 10 > 10 else newy + 10
             cv.putText(frame1_annotated, custom_text, (text_x, text_y), cv.FONT_HERSHEY_SIMPLEX, 2, color, 2, cv.LINE_AA)
-            
+         print("I JAVE REACHED")
+         prevbboxes2 = reverse(bbox_labels)
+   
        
               
    
