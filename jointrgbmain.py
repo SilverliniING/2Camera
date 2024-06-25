@@ -6,17 +6,25 @@ from sort import Sort
 from joingrgbheader import *
 import threading
 
-# Generate colors for annotations
 bbox_color = generate_rgb_array(10)
 
-# Initialize the YOLO model for pose detection
+# Initialize the results variables
+results1 = None
+results2 = None
+
 model = yolo("yolov8n-pose.pt", task="pose")
 
-# Initialize video captures
+
+
+# Uncomment these lines if you want to use video files
+# cap1 = cv.VideoCapture(video_path1)
+# cap2 = cv.VideoCapture(video_path2)
+
+# Use these lines if you want to use live camera feed
 cap1 = cv.VideoCapture(0)
 cap2 = cv.VideoCapture(1)
 
-# Reduce frame resolution
+# Set frame resolution
 frame_width = 640
 frame_height = 480
 cap1.set(cv.CAP_PROP_FRAME_WIDTH, frame_width)
@@ -27,27 +35,22 @@ cap2.set(cv.CAP_PROP_FRAME_HEIGHT, frame_height)
 ret1, prev1 = cap1.read()
 ret2, prev2 = cap2.read()
 
+thresh = 5
+
 if not ret1 or not ret2:
     print("Error: Could not read frames from cameras.")
     cap1.release()
     cap2.release()
     cv.destroyAllWindows()
-    sys.exit()
+    exit()
 
-# Initialize SORT trackers for keypoints
+# Initialize SORT trackers for each camera
 tracker1 = Sort()
 tracker2 = Sort()
 
-# Function to convert keypoints to a format suitable for SORT
-def keypoints_to_sort_format(keypoints):
-    sort_format = []
-    for keypoint in keypoints:
-        x, y = keypoint[0], keypoint[1]
-        if x != 0 or y != 0:
-            sort_format.append([x, y, x, y, 1.0])
-    return np.array(sort_format)
+def diff(img1, img2):
+    return np.sum(np.abs(img1.astype(np.int16) - img2.astype(np.int16)))
 
-# Function to process a single frame
 def process_frame(frame, tracker, model, bbox_color, window_name):
     results = model(source=frame)
     joints = np.array(results[0].keypoints.xy).astype(int)
@@ -67,22 +70,24 @@ def process_frame(frame, tracker, model, bbox_color, window_name):
     
     cv.imshow(window_name, frame_annotated)
 
-# Main loop
 def main_loop():
     while cap1.isOpened() and cap2.isOpened():
         ret1, frame1 = cap1.read()
         ret2, frame2 = cap2.read()
         
         if ret1 and ret2:
-            # Process frames in parallel
-            thread1 = threading.Thread(target=process_frame, args=(frame1, tracker1, model, bbox_color, "Camera 1"))
-            thread2 = threading.Thread(target=process_frame, args=(frame2, tracker2, model, bbox_color, "Camera 2"))
-            
-            thread1.start()
-            thread2.start()
-            
-            thread1.join()
-            thread2.join()
+            if diff(prev1, frame1) > thresh or diff(prev2, frame2) > thresh:
+                thread1 = threading.Thread(target=process_frame, args=(frame1, tracker1, model, bbox_color, "Camera 1"))
+                thread2 = threading.Thread(target=process_frame, args=(frame2, tracker2, model, bbox_color, "Camera 2"))
+                
+                thread1.start()
+                thread2.start()
+                
+                thread1.join()
+                thread2.join()
+
+                prev1 = frame1
+                prev2 = frame2
 
             # Break the loop on 'q' key press
             if cv.waitKey(1) & 0xFF == ord("q"):
