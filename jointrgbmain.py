@@ -14,7 +14,9 @@ results2 = None
 
 model = yolo("yolov8n-pose.pt", task="pose")
 
-
+# Provide the paths to your video files
+video_path1 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
+video_path2 = '/Users/aaryakawalay/Desktop/STOCK.mp4'
 
 # Uncomment these lines if you want to use video files
 # cap1 = cv.VideoCapture(video_path1)
@@ -47,6 +49,28 @@ if not ret1 or not ret2:
 # Initialize SORT trackers for each camera
 tracker1 = Sort()
 tracker2 = Sort()
+
+def keypoints_to_sort_format(keypoints):
+    """
+    Convert keypoints to SORT tracker input format (x1, y1, x2, y2, id).
+    
+    Parameters:
+    - keypoints: Numpy array of keypoints where each row is (x, y).
+    
+    Returns:
+    - numpy.ndarray: SORT tracker input format (x1, y1, x2, y2, id).
+    """
+    num_keypoints = keypoints.shape[0]
+    sort_input = np.zeros((num_keypoints, 5))
+
+    # Assuming keypoints are in the format (x, y)
+    for i, (x, y) in enumerate(keypoints):
+        # Create a bounding box around the keypoints (adjust the size as needed)
+        x1, y1 = max(0, x - 20), max(0, y - 20)
+        x2, y2 = x + 20, y + 20
+        sort_input[i] = [x1, y1, x2, y2, i + 1]  # ID starts from 1
+    
+    return sort_input
 
 def diff(img1, img2):
     return np.sum(np.abs(img1.astype(np.int16) - img2.astype(np.int16)))
